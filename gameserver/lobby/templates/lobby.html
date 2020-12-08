@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+<!-- dont include html,head,or body in this file -->
+{% block content %}
+<div>
+	<table>
+		<tr><td colspan="3">
+			<h2 style="margin:10px">Welcome
+			<input type='text' value="{{nick}}"
+			placeholder="set nickname"
+			width=200
+			onblur="setNickname(this.value);"
+			onkeypress="processKeyPress(this)"
+			 />
+			, choose an opponent to start a game.</h2>
+		</td></tr>
+		<tr><td>
+			<table>
+				<tr valign="top"><td><p style="padding-left:10px;font-size:large;font-weight:bold;">Games</p>
+					<span id="gamelist">
+						{% for game in games %}
+						<p style="color:blue;">
+						<div style="padding-left:10px;font-size:large" class="custom-control custom-checkbox custom-control-inline">
+							<input class="custom-control-input" type="checkbox" id="chk{{game}}" checked="checked" style="padding: 20px;" />
+							<label class="custom-control-label" for="defaultInline1">{{game}}</label>
+						</div>
+						</p>
+						{% endfor %}
+					</span>
+				</td><td><p style="padding-left:10px;font-size:large;font-weight:bold;">Players and their game interest</p>
+					<span id='players' style="font-size: 5em;">
+						<!-- this is populated in javascript -->
+					</span>
+				</td></tr>
+				<tr><td>
+					<span id="messages">
+						<!-- this is populated in javascript -->
+					</span>
+				</td></tr>
+			</table>
+		</td></tr>
+	</table>
+	<p style="margin: 5px"><a href="/json">JSON</a> | <a href="/log">Log</a></p>
+</div>	
+	
+<script type='text/javascript'>
+//displayNotification can be found in logevents.js
+
+function processKeyPress(control)
+{
+	var x = event.which || event.keyCode;
+	if (x == 13) { setNickname(control.value)}
+}
+function setNickname(newNickname) {
+	//called onblur to reload page with ?nick= attrib
+	//these {{expression}} are only evaluated if they are in the HTML file-render_template
+	window.location.href="{{url_for('lobby.root')}}" +'?nick='+ newNickname;
+}
+function updatePlayerState(newState) {
+	//called when the server sends new player and games data
+	//ex {'192.168.1.123':
+	//		{'nick': 'joey', 'game': 1, 'games': [tcg]}},
+	//   {'localhost':
+	//		{'nick': '', 'game': None, 'games': [tcg,pokemon]}}
+	displayNotification('updatePlayerState');
+	var playersDiv = document.getElementById('players');
+	playersDiv.innerHTML = ''; //clear the list
+	for (playerId of Object.keys(newState)) {
+		var container = document.createElement('div');
+
+		var values = newState[playerId];
+		var nick = values['nick'];
+		var game = values['game'];
+		var games = values['games'];
+		if (nick) {container.innerHTML = nick;}
+		else {container.innerHTML = playerId;}
+		displayNotification([playerId,nick,game,games].join('/'));
+		for (supportedGame of games) {
+			var hyperlink = document.createElement('a');
+			container.appendChild(hyperlink);
+			hyperlink.setAttribute('href',"/play?opponent="+ playerId );
+			hyperlink.setAttribute('title',"click to start a game");
+			hyperlink.innerHTML = '['+ supportedGame +']';
+			hyperlink.style.padding='10px';
+
+			if ( '{{player}}' != playerId) { //dont add ourselves to list, passed from routes.py
+				if (game != 'lobby' ) {
+					hyperlink.remoteAttribute('href');
+					hyperlink.innerHTML += ' (in game)';
+					playersDiv.appendChild(container);
+				}
+				else {
+					playersDiv.appendChild(container);
+				}
+			}
+		}
+	}
+
+	//console.log("updateState "+ json.dumps( new_state.toString() ));
+	//<p style="font-size:50px"><a href="play?player={{player}}">player {{player}}</a></p>
+}
+function updateGameState() {
+	displayNotification('updateGameState');
+	//called by websocket.js but not used on this page
+	//used by routes when it wishes to notify of player changes
+}
+function onConnected() {
+	//the room is the gameid or lobby for matchmaking
+	//games is a list of server supported games,
+	//the client advertises which of these they wish to advertise for play
+	var gamesList = document.getElementById('gameslist');
+	//todo find the checked and subscribe
+	socket.emit('join', {'room':'lobby', 'games': ''} );
+}
+
+var socket = null; //its updated in websocket.js in connect()
+console.log("connecting to {{websocketURL}}");
+connect('{{websocketURL}}'); //joins roomid on connect, function in websocket.js
+
+</script>
+{% endblock %}

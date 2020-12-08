@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<HTML>
+<!-- put all your global format and layout here and include it in other
+	pages by using extends "layout.htm"
+-->
+<HEAD>
+	<meta charset="utf-8">
+	<!-- for bootstrap -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+	<!-- for search icon -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+	<!-- for keyboard macros -->
+	<script type="text/javascript" src="{{url_for('static',filename='shortcuts.js')}}"></script>
+	<!-- for WebSocket / socketio -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+	<script type="text/javascript" src="{{url_for('static',filename='websocket.js')}}"></script>
+	<!-- logging to messages element displayNotification -->
+	<script type="text/javascript" src="{{url_for('static', filename='logevents.js')}}"></script>
+
+	{% if auto_refresh %}
+	<meta http-equiv="refresh" content="10" />
+	{% endif %}
+	<title>Trading Card Game-{{version}}</title>
+	<style>
+
+		body { font-size: larger;
+
+			font-family: tahoma; }
+		table { width:1000px;
+			border-collapse: collapse;
+			border-radius: 15px;
+			margin: 0px;
+			padding:0px;
+			border: 0px solid;
+			 }
+		tr { text-align: left; padding:0px; margin:0px;}
+
+		th { text-align: left;
+			padding:2px; }
+		th.rightaligned { text-align: right; }
+		td { text-align: left; padding-left: 3px; padding:0px; }
+		td.rightaligned { text-align: right; }
+		.borderedcell { border: 1px solid;
+			border-collapse: collapse;
+			padding: 3px;
+
+			}
+		.borderlesscell { border-width: 0px; }
+		input[type=text] { min-width: 200;
+			font-size: large;
+		}
+		/* input[type=checkbox] {  } */
+		input[type=radio] { padding: 3px; margin:3px; }
+		input[type=submit] {
+			font-size: large;
+		}
+		input[type=button] { margin:2px;
+			min-height: 20px;
+			font-size: large;
+		}
+		button { margin:1px;
+			min-height: 20px;
+			font-size: large;}
+		div.panel-heading { background-color: ltgray; }
+	</style>
+</HEAD>
+<BODY>
+	<nav class="navbar navbar-inverse" style="margin: 0px;">
+		<div class="container-fluid">
+			<div class="navbar-header">
+			  <a class="navbar-brand" title="End your turn" href="{{ url_for('lobby.root') }}">End Turn</a>
+			</div>
+		</div>
+	</nav>
+	{% block content %}{% endblock %}
+</BODY>
+</HTML>

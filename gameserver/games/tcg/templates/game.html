@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+<!-- dont include html,head,or body in this file -->
+{% block content %}
+<style>
+table {
+  border: 1px solid black;
+  margin: 30px;
+  width: 900px;
+}
+tr, td {
+	border: 1px solid black;
+}
+</style>
+{% for player in players%}
+<li>{{player}}</li>
+{% endfor %}
+<FORM method="POST">
+	<table>
+		<tr><td>
+			<span id="opponent_hand">ohand</span>
+		</td><td>
+			<span id="opponent_deck">odeck</span>
+		</td></tr><!-- ocards and deck -->
+		<tr><td>
+			<span id="opponent_active">oactive</span>
+		</td><td>
+			<span id="opponent_special">ospecial</span>
+		</td></tr>
+		<tr><td>
+			<span id="player_special">pspecial</span>
+		</td><td>
+			<span id="player_active">pactive</span>
+		</td></tr>
+		<tr><td>
+			<span id="player_deck">deck</span>
+		</td><td>
+			<span id="player_hand">phand</span>
+		</td></tr><!-- pcards and deck -->
+	</table>
+</FORM>
+
+<p style="margin: 5px"><a href="/json">JSON</a> | <a href="/log">Log</a></p>
+<audio controls id="music">
+	<source src="{{url_for('static', filename='Sans.m4a')}}" type="audio/mpeg">
+	Your browser does not support the audio element.
+</audio>
+
+<p>Click the buttons to play or pause the music.</p>
+
+<button onclick="play()" type="button">Play </button>
+<button onclick="pause()" type="button">Pause</button>
+
+
+<script>
+var myMusic= document.getElementById("music");
+function play() {
+	myMusic.play();
+}	
+function pause() {
+	myMusic.pause();
+}
+</script>
+
+<script>
+	//uses static/shortcut.js
+    shortcut.add("ctrl+n", function() {
+        document.getElementById('newConfiguration').click();
+    });
+
+</script>
+{% endblock %}
