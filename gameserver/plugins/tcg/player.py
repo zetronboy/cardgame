@@ -1,13 +1,8 @@
 
-from .assets import OrcCharacter, HumanCharacter
+from .assets import OrcCharacter, HumanCharacter, Characters, CardBase, Elements
 import random
 import traceback # call traceback.format_exc() on exceptions
-#import logging
-from ...log import *
-#logging.basicConfig(filename='log.txt',level=logging.DEBUG)
-# debug, info, warning
-
-
+from . import log
 
 class Player(object):
 	card_deck = []
@@ -51,16 +46,16 @@ class Player(object):
 		"""populate the player deck with random cards"""
 		self.card_deck = []
 		for i in range(self.character_count_in_deck): #1/4 deck are characters
-			character_name = random.choice(assets.Characters)
+			character_name = random.choice(Characters)
 			if character_name == 'human':
-				self.card_deck.append(assets.HumanCharacter())
+				self.card_deck.append(HumanCharacter())
 			elif character_name == 'orc':
-				self.card_deck.append(assets.OrcCharacter())
+				self.card_deck.append(OrcCharacter())
 			#debug('added {} to deck'.format(character_name))
 
 		while len(self.card_deck) < size_of_deck:
-			element_name = random.choice(assets.Elements)
-			self.card_deck.append(assets.CardBase(element_name))
+			element_name = random.choice(Elements)
+			self.card_deck.append(CardBase(element_name))
 			#debug('added {} element to deck {}/{}'.format(element_name, len(self.card_deck), size_of_deck))
 
 	def deal_card_from_deck(self):
@@ -111,7 +106,7 @@ class Player(object):
 	def find_character_in_hand(self):
 		"""get the first char from the deck"""
 		for card in self.player_cards:
-			if card.type in assets.Characters:
+			if card.type in Characters:
 				return card
 
 	def pull_character_from_hand(self):
@@ -128,22 +123,11 @@ class Player(object):
 			card = self.card_deck.pop()
 			self.player_cards.append(card)
 
-		debug('dealt new hand {}'.format(self.player_cards))
+		log.debug('dealt new hand {}'.format(self.player_cards))
 
 	def shuffle_deck(self):
 		random.shuffle(self.card_deck)
 
-def debug(message):
-	print(message)
-	log.debug(message)
-
-def warn(message):
-	print("WARN",message)
-	log.warning(message)
-
-def error(message):
-	print("ERROR",message)
-	log.error(message)
 
 if __name__ == '__main__':
 	#selftest

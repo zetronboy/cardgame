@@ -1,10 +1,9 @@
 import traceback # call traceback.format_exc() on exceptions
-from ...log import *
-#log.basicConfig(filename='log.txt',level=log.DEBUG)
+from . import log
 
 Elements = ['water','earth','wind','fire']
 Characters = ['human','orc']
-#need special affect cards list and classes
+#TODO need special affect cards list and classes
 
 import json
 
@@ -92,7 +91,6 @@ class OrcCharacter(CharacterBase):
 #todo create other character card types
 
 if __name__ == '__main__':
-    log.startlogging()
     base = CardBase('earth')
     log.debug(base.toDict())
     human = HumanCharacter()

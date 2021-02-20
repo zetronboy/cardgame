@@ -1,4 +1,4 @@
-VERSION="0.4"
+VERSION="0.5"
 from flask import (Flask, #installed with pip
 	escape, #to html escape a string for the web
 	url_for, #relative paths
@@ -6,54 +6,43 @@ from flask import (Flask, #installed with pip
 	request, #for accessing the http req params
 	redirect, #for getting back to root uri
 	current_app, #for accessing app facory in __init__
-	Blueprint #for plugin games
+	Blueprint #for plugin plugins
 				   )
 #import eventlet
 from flask_socketio import SocketIO, emit, send, join_room, rooms, leave_room
-# export FLASK_ENV=development
-# export FLASK_APP=clientview.py
-# t http://localhost:5000
-# or
-# export FLASK_APP=main_.py
-# export FLASK_DEBUG=True
-# python -m flask run --host=0.0.0.0 --port=80
-# or
-# python3 ./clientview.py
+# see __init__.py for run instructions
+import os
 
 from socket import gethostname
 import traceback # call traceback.format_exc() on exceptions
-from ..log import *
-import json #dump dumps load loads
-from ..games.tcg.game import Game as CardGame
-from .. import socketio # instantiated in __init__.py and bound to app
-from . import app
 
-players = {} # {'192.168.1.123': {'nick': 'joey', 'game': 1}}, {'localhost': {'nick': None}}
+from .. import socketio, game_list, log # instantiated in __init__.py and bound to app
+from ..main import app
+
 #TODO i need a way to clear out old players who are not connected.
 games = {}
-listen_port = 81
-supported_games_list = ['tcg'] 
+supported_games_list = game_list
 
 @app.route('/', methods=['GET'])
 def root():
 	"""list connected players to start a game. pass nick= to name yourself.
-	everyone starts in the lobby and click a link to join another player in battle
-	returns supported games list and info about the client to identify themselves
-	the client will get a list of players and active games from the websocket
+	everyone starts in the application and click a link to join another player in battle
+	returns supported plugins list and info about the client to identify themselves
+	the client will get a list of players and active plugins from the websocket
 	"""
 	player_id = request.remote_addr #ip or hostname
 	nickname = request.args.get('nick', '')
 
 	global players
 	#if player_hostip in players: del players[player_hostip] # if they were marked against a ip before we clear them out.
-	players[player_id] = {'nick': nickname, 'game': 'lobby', 'games': supported_games_list} # after they join a game this gets {'game': [gameid]}
+	players[player_id] = {'nick': nickname, 'game': 'application', 'plugins': supported_games_list} # after they join a game this gets {'game': [gameid]}
 
 	#not needed URL = 'http://' + gethostname() + ':' + str(listen_port)  # we dont need this
 	update_lobby() #mighbe be a new player 
-	return render_template('lobby.html',
+	return render_template('application.html',
 						auto_refresh=False,
 						games=supported_games_list,
-						roomid='lobby',
+						roomid='application',
 						nick=nickname,
 						player=player_id,
 						version=VERSION)
@@ -65,9 +54,7 @@ def get_json():
 
 @app.route('/log')
 def get_log():
-	content = ''
-	with open(log.log_file_name, 'r') as f:
-		content = f.readlines()
+	content = log.get_current_log_contents()
 	return str('<br />'.join(content))
 
 #------------------------------------
@@ -75,13 +62,13 @@ def get_log():
 #------------------------------------
 
 def update_lobby():
-	"""send an update to lobby members with players list
+	"""send an update to application members with players list
 	called when someone accesses the web root"""
 	#emit trys to turn the object into JSON and passes to web	
-	socketio.emit('player-state', players, room='lobby')
+	socketio.emit('player-state', players, room='application')
 
 def update_socket_clients(roomid):
-	"""sends websocket update with games and players to room members"""
+	"""sends websocket update with plugins and players to room members"""
 	if roomid in games: 
 		socketio.emit('game-state', games[roomid].toJson(), room=roomid)
 	socketio.emit('player-state', players, room=roomid)
@@ -121,14 +108,14 @@ def on_join(data):
 		game_id = data['room']  # client sends emit('join', { room': [processId] })
 
 		player_id = request.remote_addr  # who is asking to play
-		# lobby is where they wait to match up
-		# otherwise its the game id from games[] dict
+		# application is where they wait to match up
+		# otherwise its the game id from plugins[] dict
 		if game_id:
 			join_room(game_id)  # the room will be the processId index to watch
 			client_id = request.sid
 			log.debug("on_join({}) from client {} player={}".format(game_id, client_id, player_id))
 			send('welcome to {}'.format(game_id))
-			if player_id in players: #show player in the room/lobby
+			if player_id in players: #show player in the room/application
 				players[player_id]['game'] = game_id
 			else:
 				players[player_id] = {'game': game_id }
@@ -162,18 +149,24 @@ def on_leave(data):
 	for p in players:
 		if p['game'] == game_id:
 			p['game'] = None
-	update_socket_clients(game_id) # sends update to clients in the room to kick them back to lobby
+	update_socket_clients(game_id) # sends update to clients in the room to kick them back to application
 	if game_id in games: games[game_id] = None # delete the game
-	send('sending you back to the lobby')
+	send('sending you back to the application')
 
 
 last_game_id = 0
 def new_game_id():
 	global last_game_id
 	last_game_id += 1
+	player_id = request.remote_addr  # who is asking to play
+	game_id = request.args.get('gameid')
 	return last_game_id
 
-if __name__ == '__main__':
-	#websocket wraps flask run
-	log.startlogging()
-	socketio.run(app, port=listen_port, debug=True, host='0.0.0.0')
+	def new_game(self, p1, p2):
+		self.last_game_id += 1
+		with open(self.POINTER_FILE,'w') as ptr:
+			ptr.write(str(self.last_game_id))
+
+		g = Game(self.last_game_id, p1, p2)
+		self.games.append(g)
+

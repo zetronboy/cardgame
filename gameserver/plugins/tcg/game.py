@@ -1,10 +1,7 @@
 from .player import Player
 from .assets import HumanCharacter, OrcCharacter
 
-import traceback # call traceback.format_exc() on exceptions
-from ...log import *
-#logging.basicConfig(filename='log.txt',level=logging.DEBUG)
-# debug, info, warning
+from . import log
 import json
 
 class Game(object):
@@ -12,9 +9,10 @@ class Game(object):
 	last_card_id = 0
 	last_player_id = 0
 	id = 0
-	def __init__(self, player1, player2):
+	def __init__(self, id, player1, player2):
 		"""stores port for use on connect
 		port must be the same on client and server"""
+		self.id = id #game id
 		self.players.append(Player(player1))
 		self.players.append(Player(player2))
 		self.turn = 0 # what players turn is it
@@ -27,19 +25,19 @@ class Game(object):
 		return { 'id': self.id, 'player1': self.players[0].toDict(), 'player2': self.players[1].toDict() }
 
 	def attack(self):
-		debug("attack")
+		log.debug("attack")
 		pass
 
 	def move(self):
-		debug("move")
+		log.debug("move")
 		pass
 
 	def draw(self):
-		debug("draw card")
+		log.debug("draw card")
 		pass
 
 	def forefit(self):
-		debug("forefit")
+		log.debug("forefit")
 		pass
 
 
@@ -53,20 +51,5 @@ class Game(object):
 		return self.last_card_id
 
 if __name__ == '__main__':
-	log.startlogging()
-	game = Game(player.Player(), player.Player())
+	game = Game(Player(),  Player())
 	print(game.toDict())
-
-def debug(message):
-	print(message)
-	log.debug(message)
-
-
-def warn(message):
-	print("WARN",message)
-	log.warning(message)
-
-
-def error(message):
-	print("ERROR",message)
-	log.error(message)
